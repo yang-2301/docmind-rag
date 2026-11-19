@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect width="980" height="560" fill="#ffffff"/>
+
+  <text x="40" y="42" font-size="20" font-weight="700" fill="#1f2328">docmind-rag — hybrid retrieval with citations and evaluation</text>
+  <text x="40" y="64" font-size="13" fill="#57606a">47 SaaS documents → 92 chunks → 81 golden questions → four retrieval modes compared on recall@5</text>
+
+  <!-- ingestion row -->
+  <rect x="40" y="92" width="150" height="56" rx="9" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="115" y="118" font-size="13" text-anchor="middle" fill="#1f2328" font-weight="600">Corpus</text>
+  <text x="115" y="136" font-size="11" text-anchor="middle" fill="#57606a">47 SaaS docs</text>
+
+  <rect x="250" y="92" width="170" height="56" rx="9" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="335" y="118" font-size="13" text-anchor="middle" fill="#1f2328" font-weight="600">Chunker</text>
+  <text x="335" y="136" font-size="11" text-anchor="middle" fill="#57606a">heading-aware · 92 chunks</text>
+
+  <rect x="480" y="92" width="210" height="56" rx="9" fill="#ddf4ff" stroke="#54aeff"/>
+  <text x="585" y="118" font-size="13" text-anchor="middle" fill="#0969da" font-weight="600">Dual index</text>
+  <text x="585" y="136" font-size="11" text-anchor="middle" fill="#57606a">BM25 (lexical) + LSA (dense)</text>
+
+  <rect x="750" y="92" width="190" height="56" rx="9" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="845" y="118" font-size="13" text-anchor="middle" fill="#1f2328" font-weight="600">Golden set</text>
+  <text x="845" y="136" font-size="11" text-anchor="middle" fill="#57606a">81 labelled questions</text>
+
+  <line x1="192" y1="120" x2="246" y2="120" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="422" y1="120" x2="476" y2="120" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="692" y1="120" x2="746" y2="120" stroke="#57606a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a)"/>
+
+  <!-- query path -->
+  <rect x="40" y="208" width="150" height="56" rx="9" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="115" y="234" font-size="13" text-anchor="middle" fill="#1f2328" font-weight="600">Question</text>
+  <text x="115" y="252" font-size="11" text-anchor="middle" fill="#57606a">POST /api/ask</text>
+
+  <rect x="250" y="208" width="170" height="56" rx="9" fill="#fbefff" stroke="#c297ff"/>
+  <text x="335" y="234" font-size="13" text-anchor="middle" fill="#8250df" font-weight="600">Retrieve both</text>
+  <text x="335" y="252" font-size="11" text-anchor="middle" fill="#57606a">BM25 top-k + LSA top-k</text>
+
+  <rect x="480" y="208" width="210" height="56" rx="9" fill="#fff8e5" stroke="#d4a72c"/>
+  <text x="585" y="234" font-size="13" text-anchor="middle" fill="#7d4e00" font-weight="600">RRF fusion + rerank</text>
+  <text x="585" y="252" font-size="11" text-anchor="middle" fill="#57606a">reciprocal rank fusion, then rerank</text>
+
+  <rect x="750" y="208" width="190" height="56" rx="9" fill="#dafbe1" stroke="#4ac26b"/>
+  <text x="845" y="234" font-size="13" text-anchor="middle" fill="#1a7f37" font-weight="600">Answer + citations</text>
+  <text x="845" y="252" font-size="11" text-anchor="middle" fill="#57606a">cutoff 0.45 × top score</text>
+
+  <line x1="192" y1="236" x2="246" y2="236" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="422" y1="236" x2="476" y2="236" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="692" y1="236" x2="746" y2="236" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="585" y1="150" x2="585" y2="204" stroke="#54aeff" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a)"/>
+
+  <!-- eval -->
+  <rect x="40" y="308" width="900" height="120" rx="12" fill="#fbfcfd" stroke="#d0d7de" stroke-dasharray="5 4"/>
+  <text x="60" y="334" font-size="12" fill="#57606a" font-weight="700" letter-spacing="1">EVALUATION HARNESS — same golden set, four modes</text>
+  <rect x="60" y="348" width="196" height="62" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="158" y="372" font-size="12" text-anchor="middle" fill="#1f2328" font-weight="600">lexical only</text>
+  <text x="158" y="392" font-size="11" text-anchor="middle" fill="#57606a">recall@5 baseline</text>
+  <rect x="276" y="348" width="196" height="62" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="374" y="372" font-size="12" text-anchor="middle" fill="#1f2328" font-weight="600">dense only</text>
+  <text x="374" y="392" font-size="11" text-anchor="middle" fill="#57606a">LSA retrieval</text>
+  <rect x="492" y="348" width="196" height="62" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="590" y="372" font-size="12" text-anchor="middle" fill="#1f2328" font-weight="600">hybrid (RRF)</text>
+  <text x="590" y="392" font-size="11" text-anchor="middle" fill="#57606a">fusion of both</text>
+  <rect x="708" y="348" width="212" height="62" rx="8" fill="#dafbe1" stroke="#4ac26b"/>
+  <text x="814" y="372" font-size="12" text-anchor="middle" fill="#1a7f37" font-weight="700">hybrid + rerank — best</text>
+  <text x="814" y="392" font-size="11" text-anchor="middle" fill="#57606a">recall@5 97.5%</text>
+
+  <!-- ui -->
+  <rect x="40" y="456" width="440" height="72" rx="9" fill="#ddf4ff" stroke="#54aeff"/>
+  <text x="60" y="480" font-size="12.5" fill="#0969da" font-weight="600">Web UI  :8077</text>
+  <text x="60" y="502" font-size="11.5" fill="#57606a">ask a question → answer, cited sources, per-mode comparison</text>
+
+  <rect x="500" y="456" width="440" height="72" rx="9" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="520" y="480" font-size="12.5" fill="#1f2328" font-weight="600">Makefile + pytest  :8123</text>
+  <text x="520" y="502" font-size="11.5" fill="#57606a">make eval reproduces the table above from scratch</text>
+
+  <text x="40" y="548" font-size="11" fill="#8b949e">Every number in this diagram is reproducible: make ingest &amp;&amp; make eval</text>
+</svg>
