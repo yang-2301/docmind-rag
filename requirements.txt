@@ -1,0 +1,10 @@
+fastapi>=0.110
+uvicorn>=0.27
+pydantic>=2.5
+pypdf>=4.0
+numpy>=1.24
+
+# Optional upgrades — the project runs fine without any of these.
+#   openai>=1.14            # real embeddings + LLM answers
+#   sentence-transformers   # cross-encoder reranking
+#   pytest>=7.4             # tests

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DocMind — grounded answers over your documents</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c232c;
+    --line: #2a333f;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #4cc2a0;
+    --accent-dim: #1f5c4c;
+    --warn: #e3b341;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 18px 28px; border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
+  header .tag {
+    font: 11px/1 var(--mono); color: var(--muted);
+    border: 1px solid var(--line); border-radius: 20px; padding: 5px 9px;
+  }
+  header .spacer { flex: 1; }
+  header .stat { font: 11px/1 var(--mono); color: var(--muted); }
+  header .stat b { color: var(--accent); font-weight: 600; }
+
+  main {
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 0; height: calc(100vh - 61px);
+  }
+  section { padding: 22px 26px; overflow-y: auto; }
+  section.left { border-right: 1px solid var(--line); }
+
+  .modes { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .modes button {
+    background: transparent; color: var(--muted); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 11px; font: 12px/1 var(--mono); cursor: pointer;
+    transition: .15s;
+  }
+  .modes button:hover { color: var(--text); border-color: #3d4a5a; }
+  .modes button.active { background: var(--accent-dim); border-color: var(--accent); color: #d7f5ec; }
+
+  .ask { display: flex; gap: 10px; }
+  .ask input {
+    flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 12px 14px; font-size: 14px; outline: none;
+  }
+  .ask input:focus { border-color: var(--accent); }
+  .ask button {
+    background: var(--accent); color: #06231c; border: 0; border-radius: 8px;
+    padding: 0 18px; font-weight: 600; cursor: pointer;
+  }
+  .ask button:disabled { opacity: .5; cursor: default; }
+
+  .examples { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .examples span {
+    font: 11px/1 var(--mono); color: var(--muted); cursor: pointer;
+    border-bottom: 1px dashed var(--line); padding-bottom: 2px;
+  }
+  .examples span:hover { color: var(--accent); }
+
+  .answer {
+    margin-top: 22px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 18px 20px; min-height: 90px; white-space: pre-wrap;
+  }
+  .answer .meta {
+    display: flex; gap: 12px; font: 11px/1 var(--mono); color: var(--muted);
+    margin-bottom: 12px; text-transform: uppercase; letter-spacing: .6px;
+  }
+  .answer .meta .pill { color: var(--accent); }
+  .answer p { margin: 0 0 10px; }
+  .answer .empty { color: var(--muted); font-style: italic; }
+  .cite {
+    display: inline-block; font: 11px/1 var(--mono); color: var(--accent);
+    background: var(--accent-dim); border-radius: 4px; padding: 2px 5px; margin: 0 2px;
+    vertical-align: 1px;
+  }
+
+  .hits-title {
+    font: 11px/1 var(--mono); color: var(--muted); text-transform: uppercase;
+    letter-spacing: .8px; margin: 24px 0 10px;
+  }
+  .hit {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; margin-bottom: 8px;
+  }
+  .hit .head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .hit .rank { font: 11px/1 var(--mono); color: var(--accent); }
+  .hit .doc { font-weight: 600; font-size: 13px; }
+  .hit .sec { font: 11px/1 var(--mono); color: var(--muted); }
+  .hit .bar {
+    margin-left: auto; height: 3px; width: 64px; background: var(--line); border-radius: 2px;
+    overflow: hidden;
+  }
+  .hit .bar i { display: block; height: 100%; background: var(--accent); }
+  .hit .body { color: #b9c4cf; font-size: 13px; }
+  .hit .body mark { background: rgba(76,194,160,.22); color: #d7f5ec; border-radius: 2px; }
+
+  .docs { font: 12px/1.9 var(--mono); color: var(--muted); }
+  .docs b { color: var(--text); font-weight: 500; }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; height: auto; }
+    section.left { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>DocMind</h1>
+  <span class="tag">hybrid retrieval · citations · offline</span>
+  <span class="spacer"></span>
+  <span class="stat" id="stats">connecting…</span>
+</header>
+
+<main>
+  <section class="left">
+    <div class="modes" id="modes"></div>
+    <div class="ask">
+      <input id="q" placeholder="Ask something only the documents know…" autocomplete="off" />
+      <button id="go">Ask</button>
+    </div>
+    <div class="examples" id="examples"></div>
+    <div class="answer" id="answer">
+      <div class="empty">Answers are built only from the indexed documents. Every sentence carries a citation.</div>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="hits-title">Retrieved passages</div>
+    <div id="hits"></div>
+    <div class="hits-title">Corpus</div>
+    <div class="docs" id="docs"></div>
+  </section>
+</main>
+
+<script>
+const state = { mode: "hybrid_rerank", busy: false };
+
+const MODES = [
+  ["bm25", "BM25 only"],
+  ["dense", "dense only"],
+  ["hybrid", "hybrid (RRF)"],
+  ["hybrid_rerank", "hybrid + rerank"],
+];
+
+const EXAMPLES = [
+  "How long do I have to file an SLA claim?",
+  "Can I sign the DPA without talking to sales?",
+  "What should my client do when it receives a 429?",
+  "Do service accounts consume seats?",
+];
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function renderModes() {
+  const box = document.getElementById("modes");
+  box.innerHTML = "";
+  MODES.forEach(([key, label]) => {
+    const b = el("button", key === state.mode ? "active" : "", label);
+    b.onclick = () => { state.mode = key; renderModes(); submit(); };
+    box.appendChild(b);
+  });
+}
+
+function renderExamples() {
+  const box = document.getElementById("examples");
+  box.innerHTML = "";
+  EXAMPLES.forEach((text) => {
+    const s = el("span", "", text);
+    s.onclick = () => { document.getElementById("q").value = text; submit(); };
+    box.appendChild(s);
+  });
+}
+
+function markCitations(text) {
+  const frag = document.createDocumentFragment();
+  text.split(/(\[\d+\])/g).forEach((part) => {
+    const m = part.match(/^\[(\d+)\]$/);
+    if (m) frag.appendChild(el("span", "cite", m[1]));
+    else frag.appendChild(document.createTextNode(part));
+  });
+  return frag;
+}
+
+function highlight(text, query) {
+  const terms = (query || "").toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 3);
+  let html = text.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  terms.forEach((t) => {
+    html = html.replace(new RegExp("\\b(" + t + "\\w*)", "gi"), "<mark>$1</mark>");
+  });
+  return html;
+}
+
+async function submit() {
+  const input = document.getElementById("q");
+  const question = input.value.trim();
+  if (!question || state.busy) return;
+
+  state.busy = true;
+  document.getElementById("go").disabled = true;
+
+  const answerBox = document.getElementById("answer");
+  answerBox.innerHTML = "";
+  answerBox.appendChild(el("div", "empty", "Retrieving…"));
+
+  try {
+    const [askRes, searchRes] = await Promise.all([
+      fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, mode: state.mode }),
+      }).then((r) => r.json()),
+      fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: question, mode: state.mode, top_k: 6 }),
+      }).then((r) => r.json()),
+    ]);
+
+    answerBox.innerHTML = "";
+    const meta = el("div", "meta");
+    meta.appendChild(el("span", "pill", askRes.mode + " answer"));
+    meta.appendChild(el("span", "", askRes.latency_ms + " ms"));
+    if (askRes.usage) {
+      meta.appendChild(el("span", "", askRes.usage.prompt_tokens + " prompt tokens"));
+    }
+    answerBox.appendChild(meta);
+
+    const p = el("p");
+    p.appendChild(markCitations(askRes.answer || ""));
+    answerBox.appendChild(p);
+
+    const hitsBox = document.getElementById("hits");
+    hitsBox.innerHTML = "";
+    const max = Math.max(...(searchRes.hits || []).map((h) => h.score), 0.0001);
+    (searchRes.hits || []).forEach((hit, i) => {
+      const card = el("div", "hit");
+      const head = el("div", "head");
+      head.appendChild(el("span", "rank", String(i + 1).padStart(2, "0")));
+      head.appendChild(el("span", "doc", hit.doc_title));
+      head.appendChild(el("span", "sec", hit.heading));
+      const bar = el("div", "bar");
+      const fill = el("i");
+      fill.style.width = Math.max(6, Math.round((hit.score / max) * 100)) + "%";
+      bar.appendChild(fill);
+      head.appendChild(bar);
+      card.appendChild(head);
+      const body = el("div", "body");
+      body.innerHTML = highlight(hit.text.slice(0, 320) + (hit.text.length > 320 ? "…" : ""), question);
+      card.appendChild(body);
+      hitsBox.appendChild(card);
+    });
+  } catch (err) {
+    answerBox.innerHTML = "";
+    answerBox.appendChild(el("div", "empty", "Request failed: " + err.message));
+  } finally {
+    state.busy = false;
+    document.getElementById("go").disabled = false;
+  }
+}
+
+async function boot() {
+  renderModes();
+  renderExamples();
+  document.getElementById("go").onclick = submit;
+  document.getElementById("q").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submit();
+  });
+
+  try {
+    const health = await fetch("/api/health").then((r) => r.json());
+    const stats = document.getElementById("stats");
+    stats.innerHTML =
+      "<b>" + health.chunks + "</b> chunks · <b>" + health.documents + "</b> docs · " +
+      health.embedder + " · " + health.answer_mode;
+    const docs = await fetch("/api/documents").then((r) => r.json());
+    const box = document.getElementById("docs");
+    docs.documents.forEach((d) => {
+      const line = el("div");
+      line.appendChild(el("b", "", d.title));
+      box.appendChild(line);
+    });
+  } catch (err) {
+    document.getElementById("stats").textContent = "index not ready — run make ingest";
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

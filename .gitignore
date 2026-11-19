@@ -1,0 +1,29 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ---- Local index / artifacts ----
+data/index/
+*.db
+*.sqlite3
+*.npz
+eval_results.json
+
+# ---- OS ----
+.DS_Store
+Thumbs.db

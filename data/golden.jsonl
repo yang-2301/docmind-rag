@@ -1,0 +1,81 @@
+{"question": "What is the API call allowance on the Team plan?", "gold": ["pricing-plans"], "type": "identifier"}
+{"question": "How much does an extra 1,000 API calls cost on Business?", "gold": ["pricing-plans"], "type": "number"}
+{"question": "Do I get throttled if I go over my included usage?", "gold": ["pricing-plans"], "type": "paraphrase"}
+{"question": "When does my subscription renew each month?", "gold": ["billing-cycle"], "type": "date"}
+{"question": "What happens if an invoice is 50 days late?", "gold": ["billing-cycle"], "type": "threshold"}
+{"question": "Is there a fee for paying by wire transfer?", "gold": ["billing-cycle"], "type": "number"}
+{"question": "Can I get my money back after cancelling an annual plan?", "gold": ["refunds"], "type": "paraphrase"}
+{"question": "How long does a refund take to arrive?", "gold": ["refunds"], "type": "number"}
+{"question": "Can SLA credits be paid out in cash?", "gold": ["refunds", "uptime-credits"], "type": "cross-doc"}
+{"question": "What uptime do you promise on the Starter plan?", "gold": ["sla"], "type": "identifier"}
+{"question": "Does scheduled maintenance count against the SLA?", "gold": ["sla", "status-page"], "type": "cross-doc"}
+{"question": "How much credit do I get if availability drops to 98.5 percent?", "gold": ["uptime-credits"], "type": "number"}
+{"question": "How long do I have to file an SLA claim?", "gold": ["uptime-credits"], "type": "number"}
+{"question": "After I cancel, how long before my documents are gone for good?", "gold": ["data-retention"], "type": "paraphrase"}
+{"question": "Can I make you delete my workspace immediately instead of waiting?", "gold": ["data-retention"], "type": "paraphrase"}
+{"question": "Who can request erasure of a workspace?", "gold": ["data-retention"], "type": "detail"}
+{"question": "Do you act as a processor or a controller for our content?", "gold": ["gdpr-dpa"], "type": "detail"}
+{"question": "Can I sign the DPA without talking to sales?", "gold": ["gdpr-dpa"], "type": "paraphrase"}
+{"question": "Can I move my workspace to another region later?", "gold": ["gdpr-dpa"], "type": "paraphrase"}
+{"question": "What encryption is used for data at rest?", "gold": ["security-overview"], "type": "identifier"}
+{"question": "Which compliance certificates do you hold?", "gold": ["security-overview"], "type": "identifier"}
+{"question": "How fast are critical vulnerabilities fixed?", "gold": ["security-overview"], "type": "number"}
+{"question": "Is SSO included in the Team plan?", "gold": ["sso-scim"], "type": "detail"}
+{"question": "Which identity providers are supported?", "gold": ["sso-scim"], "type": "list"}
+{"question": "What happens to API keys when we enforce SSO?", "gold": ["sso-scim"], "type": "detail"}
+{"question": "What is the rate limit for the Business plan?", "gold": ["api-rate-limits"], "type": "number"}
+{"question": "What should my client do when it receives a 429?", "gold": ["api-rate-limits"], "type": "paraphrase"}
+{"question": "How many objects can one batch request contain?", "gold": ["api-rate-limits"], "type": "number"}
+{"question": "How many times will a failed webhook be retried?", "gold": ["webhooks"], "type": "number"}
+{"question": "How do I verify that a webhook really came from you?", "gold": ["webhooks"], "type": "paraphrase"}
+{"question": "Can webhook deliveries arrive more than once?", "gold": ["webhooks"], "type": "detail"}
+{"question": "How long does a standard implementation take?", "gold": ["onboarding"], "type": "number"}
+{"question": "Do Starter customers get a dedicated implementation engineer?", "gold": ["onboarding"], "type": "detail"}
+{"question": "What is the first response target for a P1?", "gold": ["support-plans"], "type": "number"}
+{"question": "How long is support available on the Team plan?", "gold": ["support-plans"], "type": "paraphrase"}
+{"question": "Who decides the severity of my ticket?", "gold": ["support-plans"], "type": "detail"}
+{"question": "How often are status updates posted during a major outage?", "gold": ["incident-process"], "type": "number"}
+{"question": "When do I get a post-incident review?", "gold": ["incident-process"], "type": "number"}
+{"question": "When is routine maintenance scheduled?", "gold": ["status-page"], "type": "paraphrase"}
+{"question": "How often are backups taken and how long are they kept?", "gold": ["backups"], "type": "number"}
+{"question": "Can I restore yesterday's data myself?", "gold": ["backups"], "type": "paraphrase"}
+{"question": "What is the recovery time objective?", "gold": ["disaster-recovery"], "type": "identifier"}
+{"question": "What export formats are available?", "gold": ["data-export"], "type": "list"}
+{"question": "How long does an export download link stay valid?", "gold": ["data-export"], "type": "number"}
+{"question": "Which companies process my data on your behalf?", "gold": ["subprocessors"], "type": "paraphrase"}
+{"question": "How much notice do you give before adding a new subprocessor?", "gold": ["subprocessors"], "type": "number"}
+{"question": "How long are audit logs kept on Business?", "gold": ["audit-logs"], "type": "number"}
+{"question": "Do service accounts consume seats?", "gold": ["seats"], "type": "detail"}
+{"question": "How long is the free trial and is a card required?", "gold": ["free-trial"], "type": "paraphrase"}
+{"question": "Do you offer discounts to nonprofits?", "gold": ["discounts"], "type": "number"}
+{"question": "How do I rotate an API key without downtime?", "gold": ["api-authentication"], "type": "paraphrase"}
+{"question": "What happens if my API key leaks into a public repo?", "gold": ["api-authentication"], "type": "detail"}
+{"question": "Why does the API use cursors instead of page numbers?", "gold": ["api-pagination"], "type": "paraphrase"}
+{"question": "How many objects come back in one page?", "gold": ["api-pagination"], "type": "number"}
+{"question": "What does a 409 response mean?", "gold": ["api-errors"], "type": "identifier"}
+{"question": "Is it safe to retry a 5xx error?", "gold": ["api-errors"], "type": "detail"}
+{"question": "How do I stop a retried POST from creating duplicates?", "gold": ["api-idempotency"], "type": "paraphrase"}
+{"question": "How long is an idempotency key remembered?", "gold": ["api-idempotency"], "type": "number"}
+{"question": "Which webhook events can I subscribe to?", "gold": ["webhook-events"], "type": "list"}
+{"question": "Are webhook events delivered in order?", "gold": ["webhook-events"], "type": "detail"}
+{"question": "Who can delete the workspace?", "gold": ["roles-permissions"], "type": "detail"}
+{"question": "Can I build my own role with specific permissions?", "gold": ["roles-permissions"], "type": "paraphrase"}
+{"question": "How do I search for an exact phrase?", "gold": ["search-syntax"], "type": "paraphrase"}
+{"question": "What is the difference between a collection and a tag?", "gold": ["data-model"], "type": "detail"}
+{"question": "Which browsers are supported?", "gold": ["browsers"], "type": "list"}
+{"question": "Does the app meet WCAG AA?", "gold": ["accessibility"], "type": "identifier"}
+{"question": "Which languages is the interface translated into?", "gold": ["localization"], "type": "list"}
+{"question": "What does professional services cost per hour?", "gold": ["professional-services"], "type": "number"}
+{"question": "How much does a certification exam cost?", "gold": ["training"], "type": "number"}
+{"question": "What commission do referral partners earn?", "gold": ["partner-program"], "type": "number"}
+{"question": "Can resellers discount below list price?", "gold": ["partner-program"], "type": "detail"}
+{"question": "Are analytics cookies on by default?", "gold": ["cookies"], "type": "detail"}
+{"question": "Is scraping third party sites through your product allowed?", "gold": ["acceptable-use"], "type": "paraphrase"}
+{"question": "What is the liability cap in the contract?", "gold": ["terms-summary"], "type": "detail"}
+{"question": "Which law governs the contract?", "gold": ["terms-summary"], "type": "detail"}
+{"question": "How long do deprecated endpoints keep working?", "gold": ["api-versioning"], "type": "number"}
+{"question": "How often is the changelog updated?", "gold": ["changelog"], "type": "paraphrase"}
+{"question": "What was the average uptime over the last year?", "gold": ["uptime-history"], "type": "number"}
+{"question": "How long does an enterprise deal take to close?", "gold": ["enterprise-quote"], "type": "number"}
+{"question": "Can an order form override the public policy page?", "gold": ["enterprise-quote"], "type": "paraphrase"}
+{"question": "Do you answer custom security questionnaires?", "gold": ["security-questionnaire"], "type": "paraphrase"}
