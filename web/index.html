@@ -284,6 +284,13 @@ async function boot() {
     if (e.key === "Enter") submit();
   });
 
+  // Demo hook: /?q=<question> pre-fills and submits (used for screenshots & docs)
+  const preset = new URLSearchParams(location.search).get("q");
+  if (preset) {
+    document.getElementById("q").value = preset;
+    submit();
+  }
+
   try {
     const health = await fetch("/api/health").then((r) => r.json());
     const stats = document.getElementById("stats");

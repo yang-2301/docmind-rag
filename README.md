@@ -2,6 +2,8 @@
 
 ![Architecture](docs/architecture.svg)
 
+![DocMind answering an SLA question with citations and retrieved passages](docs/ui-demo.png)
+
 **A retrieval-augmented answering service that cites what it used and refuses when it has nothing.**
 
 Built for the case most RAG demos skip: a support team with thousands of policy documents, where a confident wrong answer is worse than no answer.
