@@ -15,6 +15,7 @@
     --accent: #4cc2a0;
     --accent-dim: #1f5c4c;
     --warn: #e3b341;
+    --refused: #f0883e;
     --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
@@ -23,24 +24,46 @@
     font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   header {
-    display: flex; align-items: baseline; gap: 14px;
-    padding: 18px 28px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 26px; border-bottom: 1px solid var(--line);
+    min-height: 61px;
   }
-  header h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .2px; white-space: nowrap; }
   header .tag {
     font: 11px/1 var(--mono); color: var(--muted);
     border: 1px solid var(--line); border-radius: 20px; padding: 5px 9px;
+    white-space: nowrap;
+  }
+  .tabs { display: flex; gap: 4px; margin-left: 18px; }
+  .tabs button {
+    background: transparent; color: var(--muted); border: 1px solid transparent;
+    border-radius: 7px; padding: 7px 13px; font: 12px/1 var(--mono); cursor: pointer;
+    transition: .15s;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active {
+    background: var(--accent-dim); border-color: var(--accent); color: #d7f5ec;
   }
   header .spacer { flex: 1; }
-  header .stat { font: 11px/1 var(--mono); color: var(--muted); }
+  header .stat { font: 11px/1 var(--mono); color: var(--muted); white-space: nowrap; }
   header .stat b { color: var(--accent); font-weight: 600; }
 
-  main {
-    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    gap: 0; height: calc(100vh - 61px);
+  main { height: calc(100vh - 61px); }
+  .view { display: none; height: 100%; }
+  .view.active { display: grid; }
+  .view-ask { grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); }
+  .view-compare { grid-template-columns: minmax(0, 1fr); }
+  .view-corpus { grid-template-columns: 330px minmax(0, 1fr); }
+  .pane { padding: 22px 26px; overflow-y: auto; min-width: 0; }
+  .pane.left { border-right: 1px solid var(--line); }
+  .view-compare .pane { max-width: 1120px; width: 100%; margin: 0 auto; }
+
+  .section-title {
+    font: 11px/1 var(--mono); color: var(--muted); text-transform: uppercase;
+    letter-spacing: .8px; margin: 0 0 12px;
   }
-  section { padding: 22px 26px; overflow-y: auto; }
-  section.left { border-right: 1px solid var(--line); }
+  .muted { color: var(--muted); }
+  .mono { font-family: var(--mono); }
 
   .modes { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
   .modes button {
@@ -53,66 +76,175 @@
 
   .ask { display: flex; gap: 10px; }
   .ask input {
-    flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--text);
-    border-radius: 8px; padding: 12px 14px; font-size: 14px; outline: none;
+    flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--line);
+    color: var(--text); border-radius: 8px; padding: 12px 14px; font-size: 14px; outline: none;
   }
   .ask input:focus { border-color: var(--accent); }
-  .ask button {
+  .ask button, .primary {
     background: var(--accent); color: #06231c; border: 0; border-radius: 8px;
-    padding: 0 18px; font-weight: 600; cursor: pointer;
+    padding: 0 18px; font-weight: 600; cursor: pointer; font-size: 14px;
   }
-  .ask button:disabled { opacity: .5; cursor: default; }
+  .ask button:disabled, .primary:disabled { opacity: .5; cursor: default; }
 
   .examples { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
   .examples span {
-    font: 11px/1 var(--mono); color: var(--muted); cursor: pointer;
+    font: 11px/1.2 var(--mono); color: var(--muted); cursor: pointer;
     border-bottom: 1px dashed var(--line); padding-bottom: 2px;
   }
   .examples span:hover { color: var(--accent); }
 
   .answer {
-    margin-top: 22px; background: var(--panel); border: 1px solid var(--line);
+    margin-top: 20px; background: var(--panel); border: 1px solid var(--line);
     border-radius: 10px; padding: 18px 20px; min-height: 90px; white-space: pre-wrap;
   }
+  .answer.refused { border-color: rgba(240,136,62,.45); }
   .answer .meta {
-    display: flex; gap: 12px; font: 11px/1 var(--mono); color: var(--muted);
-    margin-bottom: 12px; text-transform: uppercase; letter-spacing: .6px;
+    display: flex; gap: 12px; align-items: center; font: 11px/1 var(--mono);
+    color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .6px;
   }
-  .answer .meta .pill { color: var(--accent); }
-  .answer p { margin: 0 0 10px; }
+  .status-pill {
+    font: 11px/1 var(--mono); letter-spacing: .6px; border-radius: 20px;
+    padding: 5px 10px; border: 1px solid var(--accent); color: var(--accent);
+    background: rgba(76,194,160,.08);
+  }
+  .status-pill.no {
+    border-color: var(--refused); color: var(--refused); background: rgba(240,136,62,.08);
+  }
+  .answer .meta .spacer { flex: 1; }
+  .copy {
+    background: transparent; border: 1px solid var(--line); color: var(--muted);
+    border-radius: 5px; font: 10px/1 var(--mono); padding: 5px 8px; cursor: pointer;
+  }
+  .copy:hover { color: var(--text); border-color: #3d4a5a; }
+  .answer p { margin: 0 0 10px; font-size: 15px; line-height: 1.75; }
   .answer .empty { color: var(--muted); font-style: italic; }
   .cite {
     display: inline-block; font: 11px/1 var(--mono); color: var(--accent);
-    background: var(--accent-dim); border-radius: 4px; padding: 2px 5px; margin: 0 2px;
-    vertical-align: 1px;
+    background: var(--accent-dim); border-radius: 4px; padding: 3px 6px; margin: 0 2px;
+    vertical-align: 1px; cursor: pointer; border: 1px solid transparent;
+  }
+  .cite:hover { border-color: var(--accent); }
+
+  .grounding {
+    margin-top: 14px; padding: 10px 12px; border-radius: 7px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    font: 11px/1.7 var(--mono); color: var(--muted);
+  }
+  .grounding b { color: var(--accent); font-weight: 600; }
+  .grounding.no b { color: var(--refused); }
+  .grounding .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .grounding .row + .row { margin-top: 2px; }
+
+  .citations { margin-top: 18px; }
+  .citation {
+    display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 13px; margin-bottom: 8px; cursor: pointer; color: var(--text);
+  }
+  .citation:hover { border-color: var(--accent); }
+  .citation .n {
+    font: 11px/1 var(--mono); color: var(--accent); border: 1px solid var(--accent-dim);
+    background: var(--accent-dim); border-radius: 4px; padding: 5px 7px;
+  }
+  .citation .body { min-width: 0; }
+  .citation .src { font-size: 12px; font-weight: 600; }
+  .citation .src span { color: var(--muted); font-weight: 400; }
+  .citation .snippet {
+    font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
 
-  .hits-title {
-    font: 11px/1 var(--mono); color: var(--muted); text-transform: uppercase;
-    letter-spacing: .8px; margin: 24px 0 10px;
-  }
   .hit {
     background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
-    padding: 12px 14px; margin-bottom: 8px;
+    padding: 12px 14px; margin-bottom: 8px; scroll-margin-top: 16px;
   }
+  .hit.cited { border-color: rgba(76,194,160,.65); box-shadow: inset 3px 0 0 var(--accent); }
+  .hit.flash { background: #1c2b28; }
   .hit .head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .hit .rank { font: 11px/1 var(--mono); color: var(--accent); }
-  .hit .doc { font-weight: 600; font-size: 13px; }
-  .hit .sec { font: 11px/1 var(--mono); color: var(--muted); }
-  .hit .bar {
-    margin-left: auto; height: 3px; width: 64px; background: var(--line); border-radius: 2px;
-    overflow: hidden;
-  }
+  .hit .doc { font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .hit .sec { font: 11px/1 var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hit .bar { margin-left: auto; height: 3px; width: 56px; background: var(--line); border-radius: 2px; overflow: hidden; flex: none; }
   .hit .bar i { display: block; height: 100%; background: var(--accent); }
-  .hit .body { color: #b9c4cf; font-size: 13px; }
+  .hit .body { color: #b9c4cf; font-size: 12.5px; line-height: 1.6; }
   .hit .body mark { background: rgba(76,194,160,.22); color: #d7f5ec; border-radius: 2px; }
+  .hit .foot { display: flex; align-items: center; gap: 10px; margin-top: 9px; font: 10px/1 var(--mono); color: var(--muted); }
+  .hit .foot .badge { color: var(--accent); }
+  .hit .foot .badge.no { color: var(--refused); }
+  .hit .foot button {
+    background: transparent; border: 0; color: var(--muted); font: 10px/1 var(--mono);
+    cursor: pointer; padding: 0; text-decoration: underline dotted;
+  }
+  .hit .foot button:hover { color: var(--text); }
+  .components { margin-top: 8px; padding: 8px 10px; background: var(--panel-2); border-radius: 6px; font: 10px/1.6 var(--mono); color: var(--muted); }
+  .components b { color: var(--text); font-weight: 500; }
 
   .docs { font: 12px/1.9 var(--mono); color: var(--muted); }
   .docs b { color: var(--text); font-weight: 500; }
 
-  @media (max-width: 900px) {
-    main { grid-template-columns: 1fr; height: auto; }
-    section.left { border-right: 0; border-bottom: 1px solid var(--line); }
+  /* compare view */
+  .compare-head { margin-bottom: 18px; }
+  .compare-head h2 { font-size: 20px; margin: 0 0 6px; }
+  .compare-head p { margin: 0; color: var(--muted); font-size: 13px; }
+  .summary {
+    margin: 18px 0; padding: 12px 16px; border-radius: 8px;
+    background: rgba(76,194,160,.07); border: 1px solid rgba(76,194,160,.3);
+    font: 12px/1.6 var(--mono); color: #bfe9db;
+  }
+  .compare-row {
+    display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 16px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .compare-row .label { font: 12px/1.4 var(--mono); color: var(--text); }
+  .compare-row .label .lat { display: block; color: var(--muted); font-size: 10px; margin-top: 6px; }
+  .compare-row .label button {
+    margin-top: 10px; background: transparent; color: var(--accent);
+    border: 1px solid var(--accent-dim); border-radius: 5px;
+    font: 10px/1 var(--mono); padding: 6px 8px; cursor: pointer;
+  }
+  .compare-row .label button:hover { background: var(--accent-dim); }
+  .mini-hits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .mini-hit { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; min-width: 0; }
+  .mini-hit .r { font: 10px/1 var(--mono); color: var(--accent); }
+  .mini-hit .t { font-size: 12px; font-weight: 600; margin: 5px 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini-hit .h { font: 10px/1.4 var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini-hit .s { font: 10px/1 var(--mono); color: var(--muted); margin-top: 6px; }
+
+  /* corpus view */
+  .view-corpus .pane.left { overflow: hidden; display: flex; flex-direction: column; }
+  #doc-list { overflow-y: auto; flex: 1; min-height: 0; }
+  .filter {
+    width: 100%; flex: none; background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    border-radius: 7px; padding: 9px 11px; font: 12px/1 var(--mono); outline: none; margin-bottom: 12px;
+  }
+  .filter:focus { border-color: var(--accent); }
+  .doc-item {
+    width: 100%; text-align: left; background: transparent; border: 1px solid transparent;
+    border-bottom: 1px solid var(--line); color: var(--text); padding: 10px 8px; cursor: pointer;
+  }
+  .doc-item:hover { background: var(--panel); }
+  .doc-item.active { background: var(--panel); border: 1px solid var(--accent-dim); border-radius: 6px; }
+  .doc-item .t { font-size: 12.5px; font-weight: 600; }
+  .doc-item .m { font: 10px/1.5 var(--mono); color: var(--muted); margin-top: 3px; }
+  .doc-detail h2 { font-size: 19px; margin: 0 0 4px; }
+  .doc-detail .sub { font: 11px/1.6 var(--mono); color: var(--muted); margin-bottom: 18px; }
+  .source-section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+  .source-section h3 { font-size: 13px; margin: 0 0 10px; color: var(--accent); }
+  .passage { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+  .passage:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
+  .passage .id { font: 10px/1 var(--mono); color: var(--muted); margin-bottom: 6px; }
+  .passage .txt { font-size: 13px; color: #c4ced8; line-height: 1.7; }
+
+  @media (max-width: 1000px) {
+    .view-ask, .view-corpus { grid-template-columns: 1fr; }
+    main { height: auto; }
+    .view.active { display: block; }
+    .pane { height: auto; }
+    .pane.left { border-right: 0; border-bottom: 1px solid var(--line); }
+    .mini-hits { grid-template-columns: 1fr; }
+    .compare-row { grid-template-columns: 1fr; }
+    header .tag { display: none; }
   }
 </style>
 </head>
@@ -120,46 +252,89 @@
 <header>
   <h1>DocMind</h1>
   <span class="tag">hybrid retrieval · citations · offline</span>
+  <nav class="tabs" id="tabs"></nav>
   <span class="spacer"></span>
   <span class="stat" id="stats">connecting…</span>
 </header>
 
 <main>
-  <section class="left">
-    <div class="modes" id="modes"></div>
-    <div class="ask">
-      <input id="q" placeholder="Ask something only the documents know…" autocomplete="off" />
-      <button id="go">Ask</button>
-    </div>
-    <div class="examples" id="examples"></div>
-    <div class="answer" id="answer">
-      <div class="empty">Answers are built only from the indexed documents. Every sentence carries a citation.</div>
-    </div>
-  </section>
+  <!-- ASK ------------------------------------------------------------- -->
+  <div class="view view-ask active" id="view-ask">
+    <section class="pane left">
+      <div class="modes" id="modes"></div>
+      <div class="ask">
+        <input id="q" placeholder="Ask something only the documents know…" autocomplete="off" />
+        <button id="go">Ask</button>
+      </div>
+      <div class="examples" id="examples"></div>
+      <div class="answer" id="answer">
+        <div class="empty">Answers are built only from the indexed documents. Every sentence carries a citation.</div>
+      </div>
+      <div id="citations"></div>
+    </section>
+    <section class="pane right">
+      <div class="section-title" id="hits-title">Retrieved passages</div>
+      <div id="hits"></div>
+    </section>
+  </div>
 
-  <section class="right">
-    <div class="hits-title">Retrieved passages</div>
-    <div id="hits"></div>
-    <div class="hits-title">Corpus</div>
-    <div class="docs" id="docs"></div>
-  </section>
+  <!-- COMPARE --------------------------------------------------------- -->
+  <div class="view view-compare" id="view-compare">
+    <section class="pane">
+      <div class="compare-head">
+        <h2>One question, four retrieval pipelines</h2>
+        <p>The interactive version of the evaluation table. Same question, same index — only the retrieval mode changes.</p>
+      </div>
+      <div class="ask">
+        <input id="compare-q" placeholder="Compare the four modes on a question…" autocomplete="off" />
+        <button class="primary" id="compare-go">Compare</button>
+      </div>
+      <div class="examples" id="compare-examples"></div>
+      <div id="compare-results"></div>
+    </section>
+  </div>
+
+  <!-- CORPUS ---------------------------------------------------------- -->
+  <div class="view view-corpus" id="view-corpus">
+    <section class="pane left">
+      <div class="section-title">Indexed documents</div>
+      <input class="filter" id="doc-filter" placeholder="filter by title or id…" autocomplete="off" />
+      <div id="doc-list"></div>
+    </section>
+    <section class="pane right" id="doc-detail-pane">
+      <div class="doc-detail" id="doc-detail">
+        <div class="empty muted">Pick a document to read the exact source text behind every citation.</div>
+      </div>
+    </section>
+  </div>
 </main>
 
 <script>
-const state = { mode: "hybrid_rerank", busy: false };
+const TOP_K = 6;
+const state = {
+  view: "ask", mode: "hybrid_rerank", busy: false,
+  ask: null, search: null, docs: [], activeDoc: null,
+  openComponents: new Set(), copied: false,
+};
 
+const VIEWS = [["ask", "Ask"], ["compare", "Compare modes"], ["corpus", "Corpus"]];
 const MODES = [
   ["bm25", "BM25 only"],
   ["dense", "dense only"],
   ["hybrid", "hybrid (RRF)"],
   ["hybrid_rerank", "hybrid + rerank"],
 ];
-
 const EXAMPLES = [
   "How long do I have to file an SLA claim?",
   "Can I sign the DPA without talking to sales?",
   "What should my client do when it receives a 429?",
   "Do service accounts consume seats?",
+  "What is the capital of France?",   // refusal demo: no lexical support
+];
+const COMPARE_EXAMPLES = [
+  "How long do I have to file an SLA claim?",
+  "Do service accounts consume seats?",
+  "Which companies process my data on your behalf?",
 ];
 
 function el(tag, cls, text) {
@@ -167,6 +342,38 @@ function el(tag, cls, text) {
   if (cls) node.className = cls;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+function highlight(text, query) {
+  const terms = [...new Set((query || "").toLowerCase()
+    .split(/[^a-z0-9]+/).filter((t) => t.length > 3))];
+  const safe = escapeHtml(text);
+  if (!terms.length) return safe;
+  // One pass over the escaped text: replacing term-by-term would also match
+  // text inside <mark> tags we just inserted.
+  const pattern = terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  return safe.replace(new RegExp("\\b(" + pattern + "\\w*)", "gi"), "<mark>$1</mark>");
+}
+
+function renderTabs() {
+  const box = document.getElementById("tabs");
+  box.innerHTML = "";
+  VIEWS.forEach(([key, label]) => {
+    const b = el("button", key === state.view ? "active" : "", label);
+    b.onclick = () => switchView(key);
+    box.appendChild(b);
+  });
+}
+
+function switchView(name) {
+  state.view = name;
+  document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + name));
+  renderTabs();
+  if (name === "corpus") renderDocList(document.getElementById("doc-filter").value || "");
 }
 
 function renderModes() {
@@ -179,12 +386,12 @@ function renderModes() {
   });
 }
 
-function renderExamples() {
-  const box = document.getElementById("examples");
+function renderExamples(boxId, items, handler) {
+  const box = document.getElementById(boxId);
   box.innerHTML = "";
-  EXAMPLES.forEach((text) => {
+  items.forEach((text) => {
     const s = el("span", "", text);
-    s.onclick = () => { document.getElementById("q").value = text; submit(); };
+    s.onclick = () => handler(text);
     box.appendChild(s);
   });
 }
@@ -193,80 +400,182 @@ function markCitations(text) {
   const frag = document.createDocumentFragment();
   text.split(/(\[\d+\])/g).forEach((part) => {
     const m = part.match(/^\[(\d+)\]$/);
-    if (m) frag.appendChild(el("span", "cite", m[1]));
-    else frag.appendChild(document.createTextNode(part));
+    if (m) {
+      const n = Number(m[1]);
+      const chip = el("span", "cite", "[" + n + "]");
+      chip.title = "Jump to passage " + n;
+      chip.onclick = () => focusCitation(n);
+      frag.appendChild(chip);
+    } else {
+      frag.appendChild(document.createTextNode(part));
+    }
   });
   return frag;
 }
 
-function highlight(text, query) {
-  const terms = (query || "").toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 3);
-  let html = text.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-  terms.forEach((t) => {
-    html = html.replace(new RegExp("\\b(" + t + "\\w*)", "gi"), "<mark>$1</mark>");
+function focusCitation(n) {
+  const target = document.getElementById("hit-" + n);
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  target.classList.add("flash");
+  setTimeout(() => target.classList.remove("flash"), 1400);
+}
+
+function renderAnswer(data) {
+  const box = document.getElementById("answer");
+  box.className = "answer" + (data.grounded ? "" : " refused");
+  box.innerHTML = "";
+
+  const meta = el("div", "meta");
+  meta.appendChild(el("span", "status-pill" + (data.grounded ? "" : " no"),
+                      data.grounded ? "GROUNDED" : "REFUSED"));
+  meta.appendChild(el("span", "", data.mode + " answer"));
+  meta.appendChild(el("span", "", data.latency_ms + " ms"));
+  if (data.usage) meta.appendChild(el("span", "", data.usage.prompt_tokens + " prompt tokens"));
+  meta.appendChild(el("span", "spacer"));
+  const copy = el("button", "copy", state.copied ? "copied" : "copy answer");
+  copy.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(data.answer);
+      state.copied = true;
+      copy.textContent = "copied";
+      setTimeout(() => { state.copied = false; copy.textContent = "copy answer"; }, 1800);
+    } catch (err) { copy.textContent = "select & copy"; }
+  };
+  meta.appendChild(copy);
+  box.appendChild(meta);
+
+  const p = el("p");
+  p.appendChild(markCitations(data.answer || ""));
+  box.appendChild(p);
+
+  const g = data.grounding || {};
+  const gate = el("div", "grounding" + (data.grounded ? "" : " no"));
+  const terms = g.query_terms || [];
+  const matched = g.matched_terms || [];
+  const r1 = el("div", "row");
+  r1.appendChild(el("b", "", "grounding gate"));
+  r1.appendChild(el("span", "", (g.coverage !== undefined ? Number(g.coverage).toFixed(2) : "—") +
+    " coverage · " + matched.length + "/" + terms.length + " query terms · threshold " +
+    (g.threshold !== undefined ? Number(g.threshold).toFixed(2) : "—") +
+    " · " + (g.passages_checked || 0) + " passages checked"));
+  gate.appendChild(r1);
+  const r2 = el("div", "row");
+  r2.appendChild(el("span", "", "matched: "));
+  r2.appendChild(el("b", "", matched.length ? matched.join(", ") : "none"));
+  gate.appendChild(r2);
+  const r3 = el("div", "row");
+  r3.appendChild(el("span", "", data.grounded
+    ? "Coverage clears the gate — generation allowed."
+    : "Coverage below the gate — no text was generated and no passage is cited."));
+  gate.appendChild(r3);
+  box.appendChild(gate);
+}
+
+function renderCitations(citations) {
+  const box = document.getElementById("citations");
+  box.innerHTML = "";
+  if (!citations.length) return;
+  const title = el("div", "section-title", "Sources used in this answer");
+  box.appendChild(title);
+  citations.forEach((c) => {
+    const card = el("button", "citation");
+    card.appendChild(el("span", "n", "[" + c.index + "]"));
+    const body = el("div", "body");
+    const src = el("div", "src", c.doc_title);
+    src.appendChild(el("span", "", "  ·  " + c.heading + "  ·  " + c.doc_id));
+    body.appendChild(src);
+    body.appendChild(el("div", "snippet", c.snippet));
+    card.appendChild(body);
+    card.onclick = () => focusCitation(c.index);
+    box.appendChild(card);
   });
-  return html;
+}
+
+function renderHits(data, citedNumbers, refused) {
+  const hits = data.hits || [];
+  document.getElementById("hits-title").textContent =
+    "Retrieved passages · top " + hits.length + (refused ? " · not used for this answer" : "");
+  const box = document.getElementById("hits");
+  box.innerHTML = "";
+  const max = Math.max(...hits.map((h) => h.score), 0.0001);
+  hits.forEach((hit, i) => {
+    const rank = i + 1;
+    const cited = citedNumbers.has(rank);
+    const card = el("div", "hit" + (cited ? " cited" : ""));
+    card.id = "hit-" + rank;
+    const head = el("div", "head");
+    head.appendChild(el("span", "rank", String(rank).padStart(2, "0")));
+    head.appendChild(el("span", "doc", hit.doc_title));
+    head.appendChild(el("span", "sec", hit.heading));
+    const bar = el("div", "bar");
+    const fill = el("i");
+    fill.style.width = Math.max(6, Math.round((hit.score / max) * 100)) + "%";
+    bar.appendChild(fill);
+    head.appendChild(bar);
+    card.appendChild(head);
+
+    const body = el("div", "body");
+    body.innerHTML = highlight(hit.text.slice(0, 320) + (hit.text.length > 320 ? "…" : ""), data.query);
+    card.appendChild(body);
+
+    const foot = el("div", "foot");
+    foot.appendChild(el("span", "badge" + (refused ? " no" : ""),
+      refused ? "RETRIEVED · NOT CITED" : (cited ? "CITED [" + rank + "]" : "candidate")));
+    foot.appendChild(el("span", "", "score " + Number(hit.score).toFixed(4)));
+    foot.appendChild(el("span", "", hit.source));
+    if (hit.components && Object.keys(hit.components).length) {
+      const toggle = el("button", "", state.openComponents.has(rank) ? "hide score details" : "score details");
+      toggle.onclick = () => {
+        if (state.openComponents.has(rank)) state.openComponents.delete(rank);
+        else state.openComponents.add(rank);
+        renderHits(state.search, citedNumbers, refused);
+      };
+      foot.appendChild(toggle);
+    }
+    card.appendChild(foot);
+
+    if (state.openComponents.has(rank) && hit.components) {
+      const comp = el("div", "components");
+      Object.entries(hit.components).forEach(([k, v]) => {
+        const line = el("div", "", k + ": ");
+        line.appendChild(el("b", "", Number(v).toFixed(4)));
+        comp.appendChild(line);
+      });
+      card.appendChild(comp);
+    }
+    box.appendChild(card);
+  });
 }
 
 async function submit() {
   const input = document.getElementById("q");
   const question = input.value.trim();
   if (!question || state.busy) return;
-
   state.busy = true;
   document.getElementById("go").disabled = true;
-
   const answerBox = document.getElementById("answer");
+  answerBox.className = "answer";
   answerBox.innerHTML = "";
   answerBox.appendChild(el("div", "empty", "Retrieving…"));
+  document.getElementById("citations").innerHTML = "";
 
   try {
+    const payload = (path, extra) => fetch(path, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.assign({ mode: state.mode, top_k: TOP_K }, extra)),
+    }).then((r) => r.json());
     const [askRes, searchRes] = await Promise.all([
-      fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, mode: state.mode }),
-      }).then((r) => r.json()),
-      fetch("/api/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: question, mode: state.mode, top_k: 6 }),
-      }).then((r) => r.json()),
+      payload("/api/ask", { question }),
+      payload("/api/search", { query: question }),
     ]);
-
-    answerBox.innerHTML = "";
-    const meta = el("div", "meta");
-    meta.appendChild(el("span", "pill", askRes.mode + " answer"));
-    meta.appendChild(el("span", "", askRes.latency_ms + " ms"));
-    if (askRes.usage) {
-      meta.appendChild(el("span", "", askRes.usage.prompt_tokens + " prompt tokens"));
-    }
-    answerBox.appendChild(meta);
-
-    const p = el("p");
-    p.appendChild(markCitations(askRes.answer || ""));
-    answerBox.appendChild(p);
-
-    const hitsBox = document.getElementById("hits");
-    hitsBox.innerHTML = "";
-    const max = Math.max(...(searchRes.hits || []).map((h) => h.score), 0.0001);
-    (searchRes.hits || []).forEach((hit, i) => {
-      const card = el("div", "hit");
-      const head = el("div", "head");
-      head.appendChild(el("span", "rank", String(i + 1).padStart(2, "0")));
-      head.appendChild(el("span", "doc", hit.doc_title));
-      head.appendChild(el("span", "sec", hit.heading));
-      const bar = el("div", "bar");
-      const fill = el("i");
-      fill.style.width = Math.max(6, Math.round((hit.score / max) * 100)) + "%";
-      bar.appendChild(fill);
-      head.appendChild(bar);
-      card.appendChild(head);
-      const body = el("div", "body");
-      body.innerHTML = highlight(hit.text.slice(0, 320) + (hit.text.length > 320 ? "…" : ""), question);
-      card.appendChild(body);
-      hitsBox.appendChild(card);
-    });
+    state.ask = askRes;
+    state.search = searchRes;
+    state.openComponents.clear();
+    renderAnswer(askRes);
+    renderCitations(askRes.citations || []);
+    renderHits(searchRes, new Set((askRes.citations || []).map((c) => c.index)),
+               !askRes.grounded);
   } catch (err) {
     answerBox.innerHTML = "";
     answerBox.appendChild(el("div", "empty", "Request failed: " + err.message));
@@ -276,36 +585,193 @@ async function submit() {
   }
 }
 
+async function runCompare() {
+  const input = document.getElementById("compare-q");
+  const query = input.value.trim();
+  if (!query || state.busy) return;
+  state.busy = true;
+  document.getElementById("compare-go").disabled = true;
+  const out = document.getElementById("compare-results");
+  out.innerHTML = "";
+  out.appendChild(el("div", "empty muted", "Running four pipelines…"));
+  try {
+    const data = await fetch("/api/compare", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, top_k: 3 }),
+    }).then((r) => r.json());
+    renderCompare(data);
+  } catch (err) {
+    out.innerHTML = "";
+    out.appendChild(el("div", "empty muted", "Request failed: " + err.message));
+  } finally {
+    state.busy = false;
+    document.getElementById("compare-go").disabled = false;
+  }
+}
+
+function renderCompare(data) {
+  const out = document.getElementById("compare-results");
+  out.innerHTML = "";
+  const rows = data.comparison || [];
+  const topKeys = rows.map((r) => r.hits.length
+    ? r.hits[0].doc_id + " / " + r.hits[0].heading : "none");
+  const counts = {};
+  topKeys.forEach((k) => { counts[k] = (counts[k] || 0) + 1; });
+  const [winner, n] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0] || ["none", 0];
+
+  const summary = el("div", "summary");
+  summary.textContent = n + " of " + rows.length + " modes rank “" + winner +
+    "” first · question: “" + data.query + "” · same index, same corpus, no model calls";
+  out.appendChild(summary);
+
+  rows.forEach((row) => {
+    const wrap = el("div", "compare-row");
+    const label = el("div", "label", row.mode);
+    label.appendChild(el("span", "lat", "latency " + row.latency_ms + " ms · top 3"));
+    const use = el("button", "", "use this mode →");
+    use.onclick = () => {
+      state.mode = row.mode;
+      renderModes();
+      switchView("ask");
+      document.getElementById("q").value = data.query;
+      submit();
+    };
+    label.appendChild(use);
+    wrap.appendChild(label);
+
+    const grid = el("div", "mini-hits");
+    row.hits.forEach((hit, i) => {
+      const card = el("div", "mini-hit");
+      card.appendChild(el("div", "r", "0" + (i + 1)));
+      card.appendChild(el("div", "t", hit.doc_title));
+      card.appendChild(el("div", "h", hit.heading + " · " + hit.doc_id));
+      card.appendChild(el("div", "s", "score " + Number(hit.score).toFixed(4) + " · " + hit.source));
+      grid.appendChild(card);
+    });
+    if (!row.hits.length) grid.appendChild(el("div", "mini-hit", "no hits above score 0"));
+    wrap.appendChild(grid);
+    out.appendChild(wrap);
+  });
+  out.appendChild(el("div", "muted mono", "Scores are not comparable across modes — BM25 is unbounded, fused scores are RRF sums. Compare ranks, not magnitudes."));
+  out.lastChild.style.cssText = "font-size:11px;margin-top:14px;";
+}
+
+function renderDocList(filter) {
+  const box = document.getElementById("doc-list");
+  box.innerHTML = "";
+  const needle = (filter || "").toLowerCase();
+  const docs = state.docs.filter((d) =>
+    !needle || d.title.toLowerCase().includes(needle) || d.doc_id.includes(needle));
+  if (!docs.length) {
+    box.appendChild(el("div", "muted mono", "no matching documents"));
+    return;
+  }
+  docs.forEach((d) => {
+    const item = el("button", "doc-item" + (state.activeDoc === d.doc_id ? " active" : ""));
+    item.appendChild(el("div", "t", d.title));
+    item.appendChild(el("div", "m", d.doc_id + " · " + d.chunks + " chunks · " +
+      (d.headings || []).length + " sections"));
+    item.onclick = () => openDoc(d.doc_id);
+    box.appendChild(item);
+  });
+}
+
+async function openDoc(docId) {
+  state.activeDoc = docId;
+  renderDocList(document.getElementById("doc-filter").value || "");
+  const selected = document.querySelector(".doc-item.active");
+  if (selected) selected.scrollIntoView({ block: "nearest" });
+  const pane = document.getElementById("doc-detail");
+  pane.innerHTML = "";
+  pane.appendChild(el("div", "empty muted", "Loading " + docId + "…"));
+  try {
+    const res = await fetch("/api/documents/" + encodeURIComponent(docId));
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const doc = await res.json();
+    pane.innerHTML = "";
+    const h = el("h2", "", doc.title);
+    pane.appendChild(h);
+    pane.appendChild(el("div", "sub", doc.doc_id + " · " + doc.chunks +
+      " indexed passages · " + doc.sections.length + " sections — every citation resolves to one of these passages"));
+    doc.sections.forEach((sec) => {
+      const card = el("div", "source-section");
+      card.appendChild(el("h3", "", sec.heading));
+      sec.passages.forEach((p) => {
+        const passage = el("div", "passage");
+        passage.appendChild(el("div", "id", p.chunk_id));
+        passage.appendChild(el("div", "txt", p.text));
+        card.appendChild(passage);
+      });
+      pane.appendChild(card);
+    });
+    const note = el("div", "source-section");
+    note.appendChild(el("h3", "", "Verifying a citation"));
+    const body = el("div", "passage");
+    body.appendChild(el("div", "id", "GET /api/documents/{doc_id}"));
+    body.appendChild(el("div", "txt",
+      "Every [n] in an answer points at one passage returned by /api/search. Open its document here to read the passage in full — including the surrounding sentences the 260-character citation snippet leaves out. If the source does not say it, DocMind does not say it."));
+    note.appendChild(body);
+    pane.appendChild(note);
+  } catch (err) {
+    pane.innerHTML = "";
+    pane.appendChild(el("div", "empty muted", "Could not load document: " + err.message));
+  }
+}
+
 async function boot() {
+  renderTabs();
   renderModes();
-  renderExamples();
+  renderExamples("examples", EXAMPLES, (text) => {
+    document.getElementById("q").value = text; submit();
+  });
+  renderExamples("compare-examples", COMPARE_EXAMPLES, (text) => {
+    document.getElementById("compare-q").value = text; runCompare();
+  });
   document.getElementById("go").onclick = submit;
   document.getElementById("q").addEventListener("keydown", (e) => {
     if (e.key === "Enter") submit();
   });
-
-  // Demo hook: /?q=<question> pre-fills and submits (used for screenshots & docs)
-  const preset = new URLSearchParams(location.search).get("q");
-  if (preset) {
-    document.getElementById("q").value = preset;
-    submit();
-  }
+  document.getElementById("compare-go").onclick = runCompare;
+  document.getElementById("compare-q").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runCompare();
+  });
+  document.getElementById("doc-filter").addEventListener("input", (e) => renderDocList(e.target.value));
 
   try {
     const health = await fetch("/api/health").then((r) => r.json());
     const stats = document.getElementById("stats");
-    stats.innerHTML =
-      "<b>" + health.chunks + "</b> chunks · <b>" + health.documents + "</b> docs · " +
-      health.embedder + " · " + health.answer_mode;
+    stats.innerHTML = "<b>" + health.chunks + "</b> chunks · <b>" + health.documents +
+      "</b> docs · " + health.embedder + " · " + health.answer_mode +
+      " · gate " + Number(health.grounding_min_coverage).toFixed(2);
     const docs = await fetch("/api/documents").then((r) => r.json());
-    const box = document.getElementById("docs");
-    docs.documents.forEach((d) => {
-      const line = el("div");
-      line.appendChild(el("b", "", d.title));
-      box.appendChild(line);
-    });
+    state.docs = docs.documents || [];
+    renderDocList("");
   } catch (err) {
     document.getElementById("stats").textContent = "index not ready — run make ingest";
+  }
+
+  // Demo hooks for docs & screenshots: ?q=, ?view=compare&q=, ?view=corpus&doc=,
+  // plus ?cite=N to jump to a passage after the answer renders.
+  const params = new URLSearchParams(location.search);
+  const view = params.get("view") || "ask";
+  const q = params.get("q");
+  const doc = params.get("doc");
+  if (VIEWS.some(([k]) => k === view)) switchView(view);
+  if (view === "compare") {
+    if (q) { document.getElementById("compare-q").value = q; await runCompare(); }
+  } else if (view === "corpus") {
+    const wanted = doc || (state.docs[0] && state.docs[0].doc_id);
+    if (wanted) await openDoc(wanted);
+  } else if (q) {
+    document.getElementById("q").value = q;
+    await submit();
+    const cite = Number(params.get("cite"));
+    if (cite) { focusCitation(cite); }
+    if (params.get("details") === "1") {
+      state.openComponents.add(1);
+      renderHits(state.search, new Set((state.ask.citations || []).map((c) => c.index)),
+                 !state.ask.grounded);
+    }
   }
 }
 

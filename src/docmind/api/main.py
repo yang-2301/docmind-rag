@@ -41,6 +41,12 @@ class SearchRequest(BaseModel):
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1)
     mode: str = "hybrid_rerank"
+    top_k: int = Field(8, ge=1, le=50)
+
+
+class CompareRequest(BaseModel):
+    query: str = Field(..., min_length=1)
+    top_k: int = Field(3, ge=1, le=20)
 
 
 @app.get("/api/health")
@@ -55,6 +61,7 @@ def health():
         "documents": len(service.documents),
         "embedder": service.index.embedder.name,
         "answer_mode": "llm" if settings.openai_api_key else "extractive",
+        "grounding_min_coverage": settings.grounding_min_coverage,
         "modes": list(MODES),
     }
 
@@ -62,6 +69,14 @@ def health():
 @app.get("/api/documents")
 def documents():
     return {"documents": get_service().documents}
+
+
+@app.get("/api/documents/{doc_id}")
+def document(doc_id: str):
+    detail = get_service().document(doc_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="unknown document: %s" % doc_id)
+    return detail
 
 
 @app.post("/api/search")
@@ -76,13 +91,20 @@ def search(req: SearchRequest):
     }
 
 
+@app.post("/api/compare")
+def compare(req: CompareRequest):
+    return {"query": req.query, "comparison": get_service().compare(req.query, req.top_k)}
+
+
 @app.post("/api/ask")
 def ask(req: AskRequest):
-    result = get_service().answer(req.question, mode=req.mode)
+    result = get_service().answer(req.question, mode=req.mode, top_k=req.top_k)
     return {
         "question": req.question,
         "answer": result.text,
         "mode": result.mode,
+        "grounded": result.grounded,
+        "grounding": result.grounding,
         "latency_ms": round(result.latency_ms, 1),
         "usage": result.usage,
         "citations": [

@@ -46,6 +46,12 @@ class Settings:
     rrf_k: int = 60
     rerank: bool = _flag("DOCMIND_RERANK")
 
+    # grounding gate — fraction of the question's content terms that must
+    # appear in the union of the top passages before we answer at all.
+    # 0.30 separates the bundled golden set (min 0.33) from unrelated
+    # questions (max 0.25). Lower it only after re-running `make eval`.
+    grounding_min_coverage: float = float(os.getenv("DOCMIND_MIN_COVERAGE", "0.30"))
+
     # embeddings
     embedder: str = os.getenv("DOCMIND_EMBEDDER", "lsa").strip().lower()
     embed_model: str = os.getenv("DOCMIND_EMBED_MODEL", "text-embedding-3-small")

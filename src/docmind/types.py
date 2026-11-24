@@ -76,3 +76,6 @@ class Answer:
     mode: str                        # "llm" | "extractive"
     latency_ms: float = 0.0
     usage: Optional[Dict[str, int]] = None
+    grounded: bool = False           # did the grounding gate allow generation?
+    grounding: Optional[Dict] = None  # coverage / matched terms / threshold
+

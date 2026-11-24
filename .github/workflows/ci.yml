@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Unit + API tests
+        env:
+          PYTHONPATH: src
+        run: python -m pytest -q
+
+      - name: Offline ingestion + evaluation smoke test
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m docmind.ingest.build
+          python -m docmind.eval.run_eval --modes hybrid_rerank --json /tmp/docmind-eval.json
+          python -c "import json; r=json.load(open('/tmp/docmind-eval.json'))[0]; assert r['recall@5'] >= 0.95, r; print('recall@5 =', r['recall@5'])"
+
+      - name: Grounding gate refuses an unrelated question
+        env:
+          PYTHONPATH: src
+        run: |
+          python -c "from docmind.config import settings; from docmind.service import DocMind; a=DocMind.load(settings).answer('what is the airspeed velocity of an unladen swallow'); assert not a.grounded and not a.citations, a; print('refusal OK, coverage =', a.grounding['coverage'])"

@@ -19,6 +19,7 @@ import time
 from typing import List, Sequence
 
 from ..config import Settings
+from ..retrieve.grounding import check_grounding
 from ..types import Answer, Citation, Hit
 
 SYSTEM_PROMPT = (
@@ -63,9 +64,27 @@ def _extractive(question: str, hits: Sequence[Hit]) -> Answer:
     # Only passages close to the best score are allowed to contribute.
     # Without this, a chunk that merely shares one word ("webhook") gets
     # cited next to the real answer and the citations stop meaning anything.
-    cutoff = 0.45 * (hits[0].score if hits else 0.0)
+    top_score = hits[0].score if hits else 0.0
+    cutoff = 0.45 * top_score
 
-    for hit in [h for h in hits if h.score >= cutoff][:2]:
+    # Citation numbers are *ranks in the retrieved list*, not "the nth
+    # passage we happened to quote". The UI numbers passages the same way,
+    # so [2] must always point at passage 02 — even when passage 01 had no
+    # usable sentence and was skipped.
+    for rank, hit in enumerate(hits, start=1):
+        if len(picked) >= 2 or hit.score < cutoff:
+            continue
+
+        # A passage that shares only one word with the question ("webhook",
+        # "data", "plan") is not evidence. Only the top-ranked passage may
+        # be cited on a single shared term; every other passage must match
+        # at least two, otherwise an unrelated document gets a citation
+        # simply because it ranked second.
+        matched = q_terms & set(tokenize(hit.chunk.text))
+        near_top = hit.score >= 0.8 * top_score if top_score > 0 else rank == 1
+        if not matched or not (len(matched) >= 2 or near_top):
+            continue
+
         sentences = re.split(r"(?<=[.!?])\s+", hit.chunk.text)
         scored = []
         for sentence in sentences:
@@ -78,7 +97,7 @@ def _extractive(question: str, hits: Sequence[Hit]) -> Answer:
         best = [s for ratio, s in scored[:2] if ratio >= 0.2]
         if not best:
             continue
-        marker = len(used) + 1
+        marker = rank
         used.append(Citation(index=marker, doc_id=hit.chunk.doc_id,
                              doc_title=hit.chunk.doc_title, heading=hit.chunk.heading,
                              snippet=_snippet(hit.chunk.text), score=hit.score))
@@ -93,20 +112,24 @@ def _extractive(question: str, hits: Sequence[Hit]) -> Answer:
 def answer(question: str, hits: Sequence[Hit], settings: Settings) -> Answer:
     started = time.time()
 
-    from ..index.bm25 import tokenize
-
-    q_terms = set(tokenize(question))
-    overlap = any(q_terms & set(tokenize(h.chunk.text)) for h in list(hits)[:5])
-    if not hits or not overlap:
-        # Refuse before generation. A grounded system that answers anyway is
-        # worse than one that says "I don't know".
+    # Refuse before generation. A grounded system that answers anyway is
+    # worse than one that says "I don't know". The gate uses coverage of the
+    # question by the union of the top passages, not "any shared word" —
+    # see retrieve/grounding.py for why.
+    gate = check_grounding(question, list(hits)[:5], settings.grounding_min_coverage)
+    if not gate.grounded:
         return Answer(text="No passage in the corpus covers this question.",
                       citations=[], mode="extractive",
-                      latency_ms=(time.time() - started) * 1000)
+                      latency_ms=(time.time() - started) * 1000,
+                      grounded=False, grounding=gate.as_dict())
 
     if not settings.openai_api_key:
         result = _extractive(question, hits)
         result.latency_ms = (time.time() - started) * 1000
+        # The gate can pass while extractive synthesis still finds no usable
+        # sentence; that must also be reported as a refusal, not an answer.
+        result.grounded = bool(result.citations) and not result.text.startswith("No passage")
+        result.grounding = gate.as_dict()
         return result
 
     from openai import OpenAI
@@ -132,4 +155,5 @@ def answer(question: str, hits: Sequence[Hit], settings: Settings) -> Answer:
                  "completion_tokens": completion.usage.completion_tokens}
 
     return Answer(text=text, citations=citations, mode="llm",
-                  latency_ms=(time.time() - started) * 1000, usage=usage)
+                  latency_ms=(time.time() - started) * 1000, usage=usage,
+                  grounded=True, grounding=gate.as_dict())

@@ -20,7 +20,9 @@ from docmind.index.store import Store
 from docmind.ingest.chunker import chunk_document
 from docmind.ingest.loader import load_document
 from docmind.retrieve.hybrid import rrf_fuse
-from docmind.service import DocMind
+from docmind.service import DocMind, MODES
+from docmind.generate.answer import answer as generate_answer
+from docmind.retrieve.grounding import check_grounding
 from docmind.types import Chunk, Hit
 
 
@@ -119,3 +121,119 @@ def test_answer_without_match_says_so(service):
 def test_unknown_mode_is_rejected(service):
     with pytest.raises(ValueError):
         service.search("anything", mode="magic")
+
+
+# --- grounding gate -----------------------------------------------------
+
+def test_grounding_gate_refuses_an_unrelated_question(service):
+    result = service.answer("what is the airspeed velocity of an unladen swallow")
+    assert result.grounded is False
+    assert result.citations == []
+    assert "No passage" in result.text
+    assert result.grounding["coverage"] == 0.0
+    assert result.grounding["matched_terms"] == []
+
+
+def test_grounding_gate_exposes_its_reasoning(service):
+    result = service.answer("how long are backups retained")
+    assert result.grounded is True
+    g = result.grounding
+    assert g["coverage"] >= g["threshold"]
+    assert "backup" in g["matched_terms"]
+    assert g["query_terms"] and g["passages_checked"] > 0
+
+
+def test_grounding_uses_union_of_passages_not_a_single_hit():
+    # Neither chunk alone covers the question, but together they do.
+    q = "refund window and retention period"
+    a = Hit(Chunk("a", "a", "A", "h", "The refund window is seven days.", 0), 1.0)
+    b = Hit(Chunk("b", "b", "B", "h", "The retention period is thirty days.", 0), 1.0)
+    single = check_grounding(q, [a], 0.3)
+    both = check_grounding(q, [a, b], 0.3)
+    assert single.coverage < both.coverage
+    assert both.coverage == 1.0
+
+
+def test_citation_number_is_the_retrieved_rank(tmp_path):
+    """[2] must point at passage 02 even when passage 01 is unusable."""
+    settings = Settings(root=tmp_path, index_dir=tmp_path / "index",
+                        db_path=tmp_path / "index" / "x.db")
+    first = Hit(Chunk("first", "d1", "Doc One", "Overview",
+                      "Nothing relevant appears in this passage.", 0), 10.0)
+    second = Hit(Chunk("second", "d2", "Doc Two", "Schedule",
+                       "Backups are kept for 35 days.", 0), 9.0)
+    result = generate_answer("how long are backups kept", [first, second], settings)
+    assert result.citations
+    assert result.citations[0].index == 2
+    assert "[2]" in result.text
+    assert "35 days" in result.text
+
+
+def test_weak_second_passage_is_not_cited(tmp_path):
+    """A second hit sharing one generic word must not earn a citation."""
+    settings = Settings(root=tmp_path, index_dir=tmp_path / "index",
+                        db_path=tmp_path / "index" / "x.db")
+    good = Hit(Chunk("good", "refunds", "Refunds", "Window",
+                     "Refunds take five business days to reach the original payment method.", 0), 1.0)
+    weak = Hit(Chunk("weak", "discounts", "Discounts", "Overview",
+                     "Discount statements arrive annually in advance.", 0), 0.4)
+    result = generate_answer("how long does a refund take to arrive", [good, weak], settings)
+    assert [c.doc_id for c in result.citations] == ["refunds"]
+    assert "[2]" not in result.text
+
+
+# --- new service surface ------------------------------------------------
+
+def test_documents_reports_chunk_counts_and_headings(service):
+    docs = {d["doc_id"]: d for d in service.documents}
+    assert set(docs) == {"refunds", "backups"}
+    assert all(d["chunks"] >= 1 and d["headings"] for d in docs.values())
+
+
+def test_document_detail_is_verifiable_and_unknown_ids_return_none(service):
+    detail = service.document("backups")
+    assert detail["title"] == "Backups"
+    assert any("35 days" in p["text"] for s in detail["sections"] for p in s["passages"])
+    assert service.document("does-not-exist") is None
+
+
+def test_compare_runs_every_mode_on_the_same_question(service):
+    comparison = service.compare("how long are backups retained", top_k=2)
+    assert [row["mode"] for row in comparison] == list(MODES)
+    assert all(0 < len(row["hits"]) <= 2 for row in comparison)
+    assert all(row["latency_ms"] >= 0 for row in comparison)
+
+
+# --- API ----------------------------------------------------------------
+
+def test_api_endpoints(service, monkeypatch):
+    import docmind.api.main as api
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setattr(api, "_state", {"service": service, "error": None})
+    client = TestClient(api.app)
+
+    health = client.get("/api/health")
+    assert health.status_code == 200
+    assert "grounding_min_coverage" in health.json()
+
+    docs = client.get("/api/documents").json()["documents"]
+    assert any(d["doc_id"] == "backups" for d in docs)
+    assert client.get("/api/documents/backups").json()["chunks"] >= 1
+    assert client.get("/api/documents/missing").status_code == 404
+
+    asked = client.post("/api/ask", json={
+        "question": "how long are backups retained", "mode": "hybrid_rerank", "top_k": 6,
+    }).json()
+    assert asked["grounded"] is True
+    assert asked["grounding"]["coverage"] > 0
+    assert all(c["index"] <= 6 for c in asked["citations"])
+
+    refused = client.post("/api/ask", json={
+        "question": "how do I bake sourdough bread", "top_k": 6,
+    }).json()
+    assert refused["grounded"] is False
+    assert refused["citations"] == []
+
+    comparison = client.post("/api/compare", json={"query": "how long are backups retained"}).json()
+    assert len(comparison["comparison"]) == len(MODES)

@@ -4,7 +4,11 @@ pydantic>=2.5
 pypdf>=4.0
 numpy>=1.24
 
+# Test-only: `make test` and the CI workflow need both (FastAPI's
+# TestClient is built on httpx). Not imported by the running service.
+pytest>=7.4
+httpx>=0.27
+
 # Optional upgrades — the project runs fine without any of these.
 #   openai>=1.14            # real embeddings + LLM answers
 #   sentence-transformers   # cross-encoder reranking
-#   pytest>=7.4             # tests
