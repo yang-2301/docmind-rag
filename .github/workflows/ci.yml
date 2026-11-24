@@ -8,11 +8,18 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # ubuntu-latest is Ubuntu 26.04, which no longer ships a Python 3.9
+    # build for setup-python. Keep the minimum supported version covered
+    # on 24.04 and the current version on the latest runner.
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.11"]
+        include:
+          - python-version: "3.9"
+            os: ubuntu-24.04
+          - python-version: "3.11"
+            os: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
